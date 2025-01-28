@@ -1,0 +1,28 @@
+Consider the following python code:
+
+class GRAY:
+    def __init__(self, CBITS=18):
+        self.CBITS = CBITS
+        self.cnt = 0
+        self.gray_cnt = 0
+        self.sig = 0
+
+    def reset(self):
+        self.cnt = 0
+
+    def clock_tick(self):
+        self.cnt = (self.cnt + 1) % (1 << self.CBITS)  # Increment with wrap-around
+        self.gray_cnt = self.cnt ^ (self.cnt >> 1)     # Gray code calculation
+
+        if self.gray_cnt == 0:
+            self.sig = 1
+        else:
+            self.sig = 0
+
+
+Suppose you have infinitely many calls to either reset() or clock_tick(). 
+How would you prove that one of the two happens: 
+1. there are infinitely many calls to reset(). 
+2. It is infinitely often the case that (sig == 1 and at some point later sig == 0)
+
+What lemmas would you suggest that help prove the above claim?

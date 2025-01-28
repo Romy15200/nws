@@ -1,0 +1,6 @@
+{
+    "prompt": "\nConsider the following python code:\n    \n    class GRAY:\n        def __init__(self, CBITS=18):\n            self.CBITS = CBITS\n            self.cnt = 0\n            self.gray_cnt = 0\n            self.sig = 0\n    \n        def reset(self):\n            self.cnt = 0\n    \n        def clock_tick(self):\n            self.cnt = (self.cnt + 1) % (1 << self.CBITS)  # Increment with wrap-around\n            self.gray_cnt = self.cnt ^ (self.cnt >> 1)     # Gray code calculation\n    \n            if self.gray_cnt == 0:\n                self.sig = 1\n            else:\n                self.sig = 0\n    \n    \n    Suppose you have infinitely many calls to either reset() or clock_tick(). \n    How would you prove that one of the two happens: \n    1. there are infinitely many calls to reset(). \n    2. It is infinitely often the case that (sig == 1 and at some point later sig == 0)\n    \n    What lemmas would you suggest that help prove the above claim? \n",
+    "model_name": "gpt-4o",
+    "temperature": 0.7,
+    "max_tokens": 2048
+}
