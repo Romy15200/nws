@@ -1,5 +1,6 @@
 **Task:**  
-You are an expert in formal hardware verification. Your task is to analyze a SystemVerilog hardware module and a hard-to-verify property. Then, suggest intermediate lemmas that could simplify the verification process in Jasper by breaking down the complex property into smaller, verifiable parts.
+You are an expert in formal hardware verification. Your task is to analyze a SystemVerilog hardware module and a hard-to-verify property. 
+Then, suggest intermediate lemmas that could simplify the verification process in Jasper by breaking down the complex property into smaller, verifiable parts.
 
 **Instructions:**
 
@@ -8,6 +9,17 @@ You are an expert in formal hardware verification. Your task is to analyze a Sys
 3. **Identify Invariants and Behaviors:** Think about invariants or simple behaviors that must always hold true and could serve as intermediate lemmas.
 4. **Generate Lemmas:** Propose lemmas that are easier to prove and, when assumed, help Jasper verify the hard property.
 5. **Explain the Reasoning:** For each lemma, explain why it is relevant and how it simplifies the verification.
+6. **JSON block:** Your response must contain a JSON block with the suggested lemmas. The JSON block must be formatted exactly as shown below, and be enclosed in triple backticks.
+###  Example Format:
+```JSON
+{
+   "lemmas": [
+       {
+           "lemma_index": "SystemVerilog assertion"
+       }
+   ]
+}
+```
 
 For example, for the following verilog module:
 module PWM_TOP (input clk, input [3:0] sw, output reg pulse_red);
@@ -35,41 +47,19 @@ endmodule
 You may want to propose the following lemmas:
 1. assume property (@(posedge clk) (pulse_wideR < 2**20));
 2. assume property (@(posedge clk) (always s_eventually cnt_R == 2**20));
+
+explain the reasoning behind choosing these lemmas, and end your response with:
+```JSON
+{
+   "lemmas": [
+       {
+           "lemma_1": "assume property (@(posedge clk) (pulse_wideR < 2**20));"
+       },
+       {
+           "lemma_2": "assume property (@(posedge clk) (always s_eventually cnt_R == 2**20));"
+       }
+   ]
+}
+
 **Your Turn:**  
 Analyze the provided module and property. Provide formal lemmas in SystemVerilog Assertion format that can assist in verifying the hard property of the given module.
-
-module GRAY #(localparam CBITS = 18) (input clk, input rst, output reg [CBITS-1:0] gray_cnt, output reg sig);
-
-  reg [CBITS-1:0] cnt;
-
-  always@(posedge clk, posedge rst) begin
-
-    if (rst) begin
-
-      cnt = 0;
-
-    end
-
-    else begin
-
-      cnt = cnt + 1;
-
-      gray_cnt = (cnt) ^ ((cnt) >> 1);
-
-      if(gray_cnt == 0)
-
-        sig = 1;
-
-      else
-
-        sig = 0;
-
-    end
-
-  end
-
-  p3: assert property (@(posedge clk) (always s_eventually rst == 1) or (always s_eventually (sig == 1 and s_eventually sig == 0))) ;
-
-  // F G (rst = F) -> G F (sig = T & F (sig = F))
-
-endmodule

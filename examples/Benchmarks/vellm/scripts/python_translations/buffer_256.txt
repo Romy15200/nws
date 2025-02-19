@@ -1,0 +1,48 @@
+Consider the following python code:
+
+class BufferAlloc:
+    SIZE = 128
+    LOGSIZE = 7
+
+    def __init__(self):
+        self.busy = [False] * self.SIZE
+        self.count = 0
+        self.alloc = False
+        self.free = False
+        self.free_addr = 0
+    
+    def get_nack(self):
+        return self.alloc and self.count == self.SIZE
+    
+    def get_alloc_addr(self):
+        for i in range(self.SIZE):
+            if not self.busy[i]:
+                return i
+        return 0  
+    
+    def clock_tick(self, alloc_raw, free_raw, free_addr_raw):
+        self.alloc = alloc_raw
+        self.free = free_raw
+        self.free_addr = free_addr_raw
+        
+        nack = self.get_nack()
+        alloc_addr = self.get_alloc_addr()
+        
+        self.count += (self.alloc and not nack) - (self.free and self.busy[self.free_addr])
+    
+        if self.free:
+            self.busy[self.free_addr] = False
+        if self.alloc and not nack:
+            self.busy[alloc_addr] = True
+    
+ 
+     def check_properties(self):
+        assert self.count <= self.SIZE
+   
+
+
+
+
+Suppose you can have infinitely many calls to the clock_tick method and check_properties method. 
+How would you prove that the assertion in check_properties holds in each such call?
+Suggest lemmas in the form of python assertions that help prove the assertion specified in check_properties.

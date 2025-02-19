@@ -1,0 +1,19 @@
+Module Name,LLM Model,Lemma #,Lemma,Representation
+gray_11-p3,anthropic.claude-v2:1,1,assume property (@(posedge clk) !rst |-> cnt == $past(cnt) + 1);,verilog
+gray_11-p3,anthropic.claude-v2:1,2,assume property (@(posedge clk) !rst |-> s_eventually (gray_cnt == 0));,verilog
+gray_11-p3,anthropic.claude-v2:1,3,assume property (@(posedge clk) s_eventually (rst == 1));,verilog
+gray_11-p3,gpt-4o,1,assume property (@(posedge clk) (always s_eventually gray_cnt == 0));,verilog
+gray_11-p3,gpt-4o,2,assume property (@(posedge clk) (always s_eventually rst == 1 => gray_cnt == 0));,verilog
+itc99_b12_p2,gpt-4o,1,assume property (@(posedge clock) (gamma == `G1) |-> (nl[3:0] == 4'b0000));,verilog
+itc99_b12_p2,gpt-4o,2,assume property (@(posedge clock) (gamma == `Ea) |-> (nloss == LED_ON));,verilog
+itc99_b12_p2,gpt-4o,3,assume property (@(posedge clock) (gamma == `G10) |-> (nloss == LED_ON));,verilog
+itc99_b12_p2,gpt-4o,4,assume property (@(posedge clock) (nl[3:0] != 4'b1111) |-> (nloss == LED_ON | gamma != `G10));,verilog
+seven_seg_15-p2,gpt-4o,1,assume property (@(posedge clk) (cnt < freq) |-> ##1 cnt == 0);,verilog
+seven_seg_15-p2,gpt-4o,2,assume property (@(posedge clk) (cnt == freq) |-> ##1 (digit_select == 0 && ##1 digit_select == 1) || (digit_select == 1 && ##1 digit_select == 0));,verilog
+seven_seg_15-p2,gpt-4o,3,assume property (@(posedge clk) (rst == 1) |-> ##1 (cnt == 0 && digit_select == 0 && segment == 0));,verilog
+am2910_parametrized_p4,gpt-4o,1,assume property (@(posedge clk) !(sp == 0 || sp == S_SIZE-1) |-> $stable(reg_file[sp]));,verilog
+am2910_parametrized_p4,gpt-4o,2,assume property (@(posedge clk) (sp > 0 && sp < S_SIZE) |-> (push && pop) |-> $stable(sp));,verilog
+am2910_parametrized_p4,gpt-4o,3,"assume property (@(posedge clk) (push && $past(pop)) |-> reg_file[sp] == $past(reg_file[sp], 2));",verilog
+buffer_256,gpt-4o,1,assume property (@(posedge clock) (alloc -> (alloc & ~nack) |-> (count <= SIZE)));,verilog
+buffer_256,gpt-4o,2,assume property (@(posedge clock) (free -> (free & busy[free_addr]) |-> (count > 0)));,verilog
+buffer_256,gpt-4o,3,assume property (@(posedge clock) (alloc_addr < SIZE && free_addr < SIZE));,verilog
