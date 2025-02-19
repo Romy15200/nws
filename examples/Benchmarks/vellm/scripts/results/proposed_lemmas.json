@@ -1,59 +1,38 @@
 {
     "gray_11-p3": {
+        "meta-llama/Llama-3.1-8B-Instruct": {
+            "representation": "verilog",
+            "lemmas": [
+                "assume property (@(posedge clk) (cnt > 0));",
+                "assume property (@(posedge clk) (gray_cnt == 0) -> (sig == 1));",
+                "assume property (@(posedge clk) (gray_cnt!= 0) -> (sig == 0));"
+            ]
+        },
         "anthropic.claude-v2:1": {
             "representation": "verilog",
             "lemmas": [
-                "assume property (@(posedge clk) !rst |-> cnt == $past(cnt) + 1);",
-                "assume property (@(posedge clk) !rst |-> s_eventually (gray_cnt == 0));",
-                "assume property (@(posedge clk) s_eventually (rst == 1));"
-            ]
-        },
-        "gpt-4o": {
-            "representation": "verilog",
-            "lemmas": [
-                "assume property (@(posedge clk) (always s_eventually gray_cnt == 0));",
-                "assume property (@(posedge clk) (always s_eventually rst == 1 => gray_cnt == 0));"
-            ]
-        }
-    },
-    "itc99_b12_p2": {
-        "gpt-4o": {
-            "representation": "verilog",
-            "lemmas": [
-                "assume property (@(posedge clock) (gamma == `G1) |-> (nl[3:0] == 4'b0000));",
-                "assume property (@(posedge clock) (gamma == `Ea) |-> (nloss == LED_ON));",
-                "assume property (@(posedge clock) (gamma == `G10) |-> (nloss == LED_ON));",
-                "assume property (@(posedge clock) (nl[3:0] != 4'b1111) |-> (nloss == LED_ON | gamma != `G10));"
+                "assume property (@(posedge clk) (!rst -> always eventually (gray_cnt==0)));",
+                "assume property (@(posedge clk) (gray_cnt==0 -> sig));",
+                "assume property (@(posedge clk) (sig -> eventually!sig));"
             ]
         }
     },
     "seven_seg_15-p2": {
-        "gpt-4o": {
+        "meta-llama/Llama-3.1-8B-Instruct": {
             "representation": "verilog",
             "lemmas": [
-                "assume property (@(posedge clk) (cnt < freq) |-> ##1 cnt == 0);",
-                "assume property (@(posedge clk) (cnt == freq) |-> ##1 (digit_select == 0 && ##1 digit_select == 1) || (digit_select == 1 && ##1 digit_select == 0));",
-                "assume property (@(posedge clk) (rst == 1) |-> ##1 (cnt == 0 && digit_select == 0 && segment == 0));"
+                "assume property (@(posedge clk) (rst == 1));",
+                "assume property (@(posedge clk) (cnt < freq));",
+                "assume property (@(posedge clk) (digit_select == 0));",
+                "assume property (@(posedge clk) (segment == both7seg[13:7]));"
             ]
-        }
-    },
-    "am2910_parametrized_p4": {
-        "gpt-4o": {
+        },
+        "anthropic.claude-v2:1": {
             "representation": "verilog",
             "lemmas": [
-                "assume property (@(posedge clk) !(sp == 0 || sp == S_SIZE-1) |-> $stable(reg_file[sp]));",
-                "assume property (@(posedge clk) (sp > 0 && sp < S_SIZE) |-> (push && pop) |-> $stable(sp));",
-                "assume property (@(posedge clk) (push && $past(pop)) |-> reg_file[sp] == $past(reg_file[sp], 2));"
-            ]
-        }
-    },
-    "buffer_256": {
-        "gpt-4o": {
-            "representation": "verilog",
-            "lemmas": [
-                "assume property (@(posedge clock) (alloc -> (alloc & ~nack) |-> (count <= SIZE)));",
-                "assume property (@(posedge clock) (free -> (free & busy[free_addr]) |-> (count > 0)));",
-                "assume property (@(posedge clock) (alloc_addr < SIZE && free_addr < SIZE));"
+                "assume property (@(posedge clk) cnt < freq |=> (always s_eventually cnt == freq));",
+                "assume property (@(posedge clk) always ((cnt == freq) |=> (X digit_select != digit_select)));)",
+                "assume property (@(posedge clk) (rst == 1) |=> (X digit_select == 0));"
             ]
         }
     }

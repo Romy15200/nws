@@ -4,6 +4,7 @@ import csv
 import subprocess
 import re
 import sys
+import argparse
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from utils import extract_json_block, extract_lemmas, ROOT_DIR
 
@@ -52,7 +53,7 @@ def save_lemmas_to_json(json_file):
 
     print(f"[INFO] Lemmas saved to {json_file}")
 
-def process_prompts(prompt_dir):
+def process_prompts(prompt_dir, force_cached):
     """ Iterates over all prompt files in the directory, prompts llms and outputs returned lemmas in a . """
     
     for prompt_file in os.listdir(prompt_dir):
@@ -66,9 +67,19 @@ def process_prompts(prompt_dir):
             json_prompt = json.load(f)
 
         # Run the LLM and extract JSON response
-        result = subprocess.run(["python3", PROMPT_SCRIPT, prompt_path], capture_output=True, text=True)
+        command = ["python3", PROMPT_SCRIPT, prompt_path]
+        if force_cached:
+            command.append("--force_cached")
+
+        result = subprocess.run(command, capture_output=True, text=True)
         #print(result)
         llm_response =  result.stdout.strip()
+        #print(llm_response)
+
+        if force_cached and llm_response.startswith("Cache miss"):
+            print(f"[CACHE MISS] No cached response for {prompt_file}. Skipping.")
+            continue
+
         json_block = extract_json_block(llm_response)
 
         if not json_block:
@@ -94,4 +105,8 @@ def process_prompts(prompt_dir):
 
 # Run the processing function
 if __name__ == "__main__":
-    process_prompts(PROMPT_DIR)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--force_cached', action="store_true", help="Get lemmas for a prompt only if cached")
+    args = parser.parse_args()
+
+    process_prompts(PROMPT_DIR, args.force_cached)

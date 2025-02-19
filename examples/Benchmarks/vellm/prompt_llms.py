@@ -33,7 +33,7 @@ class LLMBase(ABC):
             return responses[0]  # deterministic: always return the first response
         return random.choices(responses, k=1)[0]
 
-    def get_response(self, prompt: str, temperature: float = 0.7, clear = False) -> Tuple[str, float]:
+    def get_response(self, prompt: str, temperature: float = 0.7, clear = False, force_cached = False) -> Tuple[str, float]:
         """Check cache or generate new responses."""
         query_hash = self._hash_query(prompt)
         
@@ -41,10 +41,13 @@ class LLMBase(ABC):
             self.cache.delete(query_hash)
 
         if query_hash in self.cache:
-            print("Cache hit")
+            #print("Cache hit")
             responses = self.cache[query_hash]
         else:
-            print("Cache miss")
+            #print("Cache miss")
+            if force_cached:
+                return "Cache miss"
+            
             responses = self._generate_responses(prompt, num_samples=5) 
             self.cache[query_hash] = responses  # store in cache
         
@@ -158,6 +161,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('config_file', type=str, help="Path to the JSON file containing the prompt, model and parameter specifications.")
     parser.add_argument('--clear', action="store_true", help="Clear cache entry and force prompting underlying llm. Saves new response in cache")
+    parser.add_argument('--force_cached', action="store_true", help="Return response only if cached")
     args = parser.parse_args()
     
 
@@ -180,26 +184,14 @@ def main():
     if model is None:
         raise ValueError(f"Unsupported model: {model_name}")
     
-    # temperature = params.get("temperature")
-    # if temperature:
-    #     response = model.get_response(params["prompt"], temperature)
-    # else:
-    #     response = model.get_response(params["prompt"])
+   
     
-    response = model.get_response(params["prompt"], **({"temperature": params["temperature"]} if "temperature" in params else {}), clear=args.clear)
+    response = model.get_response(params["prompt"], **({"temperature": params["temperature"]} if "temperature" in params else {}), clear=args.clear,
+                                  force_cached = args.force_cached)
   
     print(response)
  
-    # if 'prompt' not in params:
-    #     raise ValueError("The JSON configuration file must include a 'prompt' field.")
 
-    # Gets the response from the cache or by prompting the LLM
-    # response = query_llm(**params)
-
-    # # Print the response
-    # print("LLM Response: ", response)
-    
-    #cache.close()
 
 
 if __name__ == "__main__":
