@@ -7,6 +7,7 @@ import sys
 import argparse
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from utils import extract_json_block, extract_lemmas, ROOT_DIR
+from prompt_llms import prompt_llms
 
 # Directory containing prompt files
 PROMPT_DIR = os.path.join(ROOT_DIR, "scripts/prompts")
@@ -59,7 +60,10 @@ def process_prompts(prompt_dir, force_cached):
     for prompt_file in os.listdir(prompt_dir):
         if not prompt_file.endswith(".json"):  # Ensure it's a JSON prompt file
             continue
-      
+        
+        if "Llama-3.3-70B" in prompt_file: # Llama 70B takes too long on current resources
+            continue 
+
         prompt_path = os.path.join(prompt_dir, prompt_file)
         print(f"[INFO] Processing {prompt_path}...")
 
@@ -67,19 +71,33 @@ def process_prompts(prompt_dir, force_cached):
             json_prompt = json.load(f)
 
         # Run the LLM and extract JSON response
-        command = ["python3", PROMPT_SCRIPT, prompt_path]
-        if force_cached:
-            command.append("--force_cached")
+        try:
+            result = prompt_llms(prompt_path, force_cached=force_cached)
+        #print(result["cache_hit"])
+        except Exception as e:
+            print(f"[ERROR]: {e}. Skipping.")
+            continue 
 
-        result = subprocess.run(command, capture_output=True, text=True)
-        #print(result)
-        llm_response =  result.stdout.strip()
+        llm_response = result["response"]
         #print(llm_response)
-
-        if force_cached and llm_response.startswith("Cache miss"):
-            print(f"[CACHE MISS] No cached response for {prompt_file}. Skipping.")
+        if force_cached and not result["cache_hit"]:
+            assert llm_response == None
+            print(f"[FORCE CACHE] No cached response for {prompt_file}. Skipping.")
             continue
 
+        # command = ["python3", PROMPT_SCRIPT, prompt_path]
+        # if force_cached:
+        #     command.append("--force_cached")
+
+        # result = subprocess.run(command, capture_output=True, text=True)
+        # #print(result)
+        # llm_response =  result.stdout.strip()
+        #print(llm_response)
+
+        # if force_cached and llm_response.startswith("Cache miss"):
+        #     print(f"[CACHE MISS] No cached response for {prompt_file}. Skipping.")
+        #     continue
+        #print(llm_response)
         json_block = extract_json_block(llm_response)
 
         if not json_block:

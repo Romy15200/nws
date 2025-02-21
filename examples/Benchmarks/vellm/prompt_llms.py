@@ -11,7 +11,6 @@ import argparse
 from abc import ABC, abstractmethod
 from typing import List, Dict, Tuple
 import os
-import requests
 from utils import ROOT_DIR 
 
 CACHE = os.path.join(ROOT_DIR, "llm_cache")
@@ -33,28 +32,35 @@ class LLMBase(ABC):
             return responses[0]  # deterministic: always return the first response
         return random.choices(responses, k=1)[0]
 
-    def get_response(self, prompt: str, temperature: float = 0.7, clear = False, force_cached = False) -> Tuple[str, float]:
-        """Check cache or generate new responses."""
+    def get_response(self, prompt: str, temperature: float = 0.7, clear = False, force_cached = False, num_samples=5) -> Tuple[str, float]:
+        """
+        Check cache or generate new responses.
+        Returns the response and whether it was in the cache.
+        If clear == True, the corresponding entry in the cache is deleted and get_response returns 
+        whether the entry existed in the cache, together with the newly generated response.
+        """
+        
         query_hash = self._hash_query(prompt)
-        
-        if clear and query_hash in self.cache:
-            self.cache.delete(query_hash)
+        cache_hit = query_hash in self.cache
 
-        if query_hash in self.cache:
-            #print("Cache hit")
-            responses = self.cache[query_hash]
-        else:
-            #print("Cache miss")
-            if force_cached:
-                return "Cache miss"
-            
-            responses = self._generate_responses(prompt, num_samples=5) 
-            self.cache[query_hash] = responses  # store in cache
+        #print(f"cache hit: {cache_hit}")
+        #print(f"clear: {clear}")
+        #print(self.cache[query_hash])
+        if clear:
+            self.cache.delete(query_hash)
         
-        return self._sample_from_responses(responses, temperature)
+        responses = self.cache[query_hash] if (cache_hit and not clear) \
+            else self._generate_responses(prompt, num_samples) if not force_cached else None
+        if (not cache_hit or clear) and not force_cached:
+            self.cache[query_hash] = responses  # store in cache
+
+        
+        response = self._sample_from_responses(responses, temperature) if responses else None
+
+        return {"cache_hit": cache_hit, "response": response}
 
     @abstractmethod
-    def _generate_responses(self, prompt: str, num_samples: int = 5, temperature=0.7) -> List[Tuple[str, float]]: #TODO: change back to 5
+    def _generate_responses(self, prompt: str, num_samples: int = 5, temperature=0.7) -> List[Tuple[str, float]]: 
         """Generate multiple responses along with their probabilities for a prompt."""
         pass
 
@@ -65,11 +71,12 @@ class Llama(LLMBase):
         self.model_name = model_name  
 
     def _generate_responses(self, prompt: str, num_samples: int, temperature = 0.7) -> List[Tuple[str, float]]:
-        if not hasattr(self, "device"):
-            self.device =  0 if torch.cuda.is_available() else -1
+        #if not hasattr(self, "device"):
+        #    self.device =  0 if torch.cuda.is_available() else -1
         if not hasattr(self, "generator"):
-            self.generator = pipeline("text-generation", model=self.model_name, device=self.device)
-        
+            #self.generator = pipeline("text-generation", model=self.model_name, device=self.device)
+            self.generator = pipeline("text-generation", model=self.model_name, device_map="auto")
+            
         responses = []
         for _ in range(num_samples):
             response = self.generator(prompt, num_return_sequences=1, return_full_text=False, max_new_tokens=5000)
@@ -152,21 +159,13 @@ class DeepSeekR1(LLMBase):
         return [ollama.chat(model="deepseek-r1", messages=[{"role": "user", "content": prompt}])["message"]["content"] 
                for i in range(num_samples)]
 
-
-
-def main():
-    # Initialize cache
-    #cache = Cache('./cache')
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('config_file', type=str, help="Path to the JSON file containing the prompt, model and parameter specifications.")
-    parser.add_argument('--clear', action="store_true", help="Clear cache entry and force prompting underlying llm. Saves new response in cache")
-    parser.add_argument('--force_cached', action="store_true", help="Return response only if cached")
-    args = parser.parse_args()
+def prompt_llms(config_file, **kwargs):
+    temperature = kwargs.pop("temperature", 0.7)
+    clear = kwargs.pop("clear", False)
+    force_cached = kwargs.pop("force_cached", False)
     
-
-    # Load the configuration from the JSON file
-    with open(args.config_file, 'r') as f:
+    # Load prompt and model name from the JSON file
+    with open(config_file, 'r') as f:
         params = json.load(f)
 
     model_name = params["model_name"]
@@ -179,17 +178,30 @@ def main():
         "gpt": GPT
     }
        
-
     model = next((model_class(model_name) for prefix, model_class in model_classes.items() if model_name.startswith(prefix)), None)
     if model is None:
         raise ValueError(f"Unsupported model: {model_name}")
     
-   
+    result = model.get_response(prompt, temperature, clear=clear, force_cached=force_cached)
+
+    return result
+
+def main():
+    # Initialize cache
+    #cache = Cache('./cache')
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('config_file', type=str, help="Path to the JSON file containing the prompt, model and parameter specifications.")
+    parser.add_argument('--clear', action="store_true", help="Clear cache entry and force prompting underlying llm. Saves new response in cache")
+    parser.add_argument('--force_cached', action="store_true", help="Return response only if cached")
+    parser.add_argument('--temperature', help="Temperature according to which to sample, not supported yet")
+    args = parser.parse_args()
     
-    response = model.get_response(params["prompt"], **({"temperature": params["temperature"]} if "temperature" in params else {}), clear=args.clear,
-                                  force_cached = args.force_cached)
-  
-    print(response)
+    kwargs = {key: value for key, value in vars(args).items() if key in {"clear", "force_cached", "temperature"} and value is not None}
+
+    result = prompt_llms(args.config_file, **kwargs)
+   
+    print(result["response"])
  
 
 
