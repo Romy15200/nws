@@ -169,3 +169,4 @@ response = prompt_llm("/home/romy.peled/vellm/nws/nws/examples/Benchmarks/vellm/
 #response = prompt_llm("/home/romy.peled/vellm/nws/nws/examples/Benchmarks/vellm/scripts/prompts/verilog_seven_seg_15-p2_gpt-4o.json")
 #print(response)
 print(extract_lemmas(extract_json_block(response)))
+
