@@ -1,106 +1,143 @@
 {
     "gray_11-p3": {
         "anthropic.claude-v2:1": {
-            "representation": "verilog",
-            "lemmas": [
-                "assume property (@(posedge clk) (!rst -> always eventually (gray_cnt==0)));",
-                "assume property (@(posedge clk) (gray_cnt==0 -> sig));",
-                "assume property (@(posedge clk) (sig -> eventually!sig));"
-            ]
+            "verilog": {
+                "lemmas": [
+                    "assume property (@(posedge clk) (!rst -> always eventually (gray_cnt==0)));",
+                    "assume property (@(posedge clk) (gray_cnt==0 -> sig));",
+                    "assume property (@(posedge clk) (sig -> eventually!sig));"
+                ]
+            }
         },
         "gpt-4o": {
-            "representation": "verilog",
-            "lemmas": [
-                "assume property (@(posedge clk) (always s_eventually gray_cnt == 0));",
-                "assume property (@(posedge clk) (always s_eventually (sig == 1 and s_eventually sig == 0)));"
-            ]
+            "verilog": {
+                "lemmas": [
+                    "assume property (@(posedge clk) (always s_eventually gray_cnt == 0));",
+                    "assume property (@(posedge clk) (always s_eventually (sig == 1 and s_eventually sig == 0)));"
+                ]
+            }
         },
         "meta-llama/Llama-3.1-8B-Instruct": {
-            "representation": "verilog",
-            "lemmas": [
-                "assume property (@(posedge clk) (cnt > 0));",
-                "assume property (@(posedge clk) (gray_cnt == 0) -> (sig == 1));",
-                "assume property (@(posedge clk) (gray_cnt!= 0) -> (sig == 0));"
-            ]
+            "verilog": {
+                "lemmas": [
+                    "assume property (@(posedge clk) (cnt > 0));",
+                    "assume property (@(posedge clk) (gray_cnt == 0) -> (sig == 1));",
+                    "assume property (@(posedge clk) (gray_cnt!= 0) -> (sig == 0));"
+                ]
+            }
         }
     },
     "itc99_b12_p2": {
         "meta-llama/Llama-3.1-8B-Instruct": {
-            "representation": "verilog",
-            "lemmas": [
-                "assume property (@(posedge clk) (counter[2:0] == 0));",
-                "assume property (@(posedge clk) (sound == S_WIN | sound == S_LOSS));",
-                "assume property (@(posedge clk) (nl[3:0] == 15));",
-                "assume property (@(posedge clk) (play == PLAY_ON | play == PLAY_OFF));",
-                "assume property (@(posedge clk) (speaker == s));",
-                "assume property (@(posedge clk) (counter[2:0] < 256));",
-                "assume property (@(posedge clk) (timebase < COUNT_FIN));",
-                "assume property (@(posedge clk) (count < COUNT_FIN));",
-                "assume property (@(posedge clk) (max < SIZE_MEM));",
-                "assume property (@(posedge clk) (scan < SIZE_MEM));"
-            ]
+            "verilog": {
+                "lemmas": [
+                    "assume property (@(posedge clk) (counter[2:0] == 0));",
+                    "assume property (@(posedge clk) (sound == S_WIN | sound == S_LOSS));",
+                    "assume property (@(posedge clk) (nl[3:0] == 15));",
+                    "assume property (@(posedge clk) (play == PLAY_ON | play == PLAY_OFF));",
+                    "assume property (@(posedge clk) (speaker == s));",
+                    "assume property (@(posedge clk) (counter[2:0] < 256));",
+                    "assume property (@(posedge clk) (timebase < COUNT_FIN));",
+                    "assume property (@(posedge clk) (count < COUNT_FIN));",
+                    "assume property (@(posedge clk) (max < SIZE_MEM));",
+                    "assume property (@(posedge clk) (scan < SIZE_MEM));"
+                ]
+            }
+        },
+        "anthropic.claude-v2:1": {
+            "verilog": {
+                "lemmas": [
+                    "assume property ((nloss == 1) |-> ((nl[0] == 0) && (nl[1] == 0) && (nl[2] == 0) && (nl[3] == 0))); ",
+                    "assume property ((nl[0] == 1) || (nl[1] == 1) || (nl[2] == 1) || (nl[3] == 1));"
+                ]
+            }
         },
         "gpt-4o": {
-            "representation": "verilog",
-            "lemmas": [
-                "assume property (@(posedge clock) (gamma == `G10 | gamma == `Ea | gamma == `E0 | gamma == `E1) |-> (nl != 4'b1111));",
-                "assume property (@(posedge clock) (gamma == `G5 | gamma == `G6 | gamma == `G7) |-> (count > 0));",
-                "assume property (@(posedge clock) (wr == 1) |-> (memory[address] != 4'b1111));"
-            ]
+            "verilog": {
+                "lemmas": [
+                    "assume property (@(posedge clock) (gamma == `G10 | gamma == `Ea | gamma == `E0 | gamma == `E1) |-> (nl != 4'b1111));",
+                    "assume property (@(posedge clock) (gamma == `G5 | gamma == `G6 | gamma == `G7) |-> (count > 0));",
+                    "assume property (@(posedge clock) (wr == 1) |-> (memory[address] != 4'b1111));"
+                ]
+            }
         }
     },
     "seven_seg_15-p2": {
         "anthropic.claude-v2:1": {
-            "representation": "verilog",
-            "lemmas": [
-                "assume property (@(posedge clk) cnt < freq |=> (always s_eventually cnt == freq));",
-                "assume property (@(posedge clk) always ((cnt == freq) |=> (X digit_select != digit_select)));)",
-                "assume property (@(posedge clk) (rst == 1) |=> (X digit_select == 0));"
-            ]
+            "verilog": {
+                "lemmas": [
+                    "assume property (@(posedge clk) cnt < freq |=> (always s_eventually cnt == freq));",
+                    "assume property (@(posedge clk) always ((cnt == freq) |=> (X digit_select != digit_select)));)",
+                    "assume property (@(posedge clk) (rst == 1) |=> (X digit_select == 0));"
+                ]
+            }
         },
         "meta-llama/Llama-3.1-8B-Instruct": {
-            "representation": "verilog",
-            "lemmas": [
-                "assume property (@(posedge clk) (rst == 1));",
-                "assume property (@(posedge clk) (cnt < freq));",
-                "assume property (@(posedge clk) (digit_select == 0));",
-                "assume property (@(posedge clk) (segment == both7seg[13:7]));"
-            ]
+            "verilog": {
+                "lemmas": [
+                    "assume property (@(posedge clk) (rst == 1));",
+                    "assume property (@(posedge clk) (cnt < freq));",
+                    "assume property (@(posedge clk) (digit_select == 0));",
+                    "assume property (@(posedge clk) (segment == both7seg[13:7]));"
+                ]
+            }
         },
         "gpt-4o": {
-            "representation": "verilog",
-            "lemmas": [
-                "assert property (@(posedge clk) (cnt == freq) |-> (digit_select == !digit_select));",
-                "assume property (@(posedge clk) (always s_eventually rst == 1));",
-                "assert property (@(posedge clk) (cnt == freq) |-> (cnt == 0));"
-            ]
+            "verilog": {
+                "lemmas": [
+                    "assert property (@(posedge clk) (cnt == freq) |-> (digit_select == !digit_select));",
+                    "assume property (@(posedge clk) (always s_eventually rst == 1));",
+                    "assert property (@(posedge clk) (cnt == freq) |-> (cnt == 0));"
+                ]
+            }
         }
     },
     "am2910_parametrized_p4": {
         "meta-llama/Llama-3.1-8B-Instruct": {
-            "representation": "verilog",
-            "lemmas": [
-                "assume property @(posedge clk) (sp >= 0 and sp <= S_SIZE-1);",
-                "assume property @(posedge clk) (reg_file[sp] == {MBITS{1'b0}});"
-            ]
+            "verilog": {
+                "lemmas": [
+                    "assume property @(posedge clk) (sp >= 0 and sp <= S_SIZE-1);",
+                    "assume property @(posedge clk) (reg_file[sp] == {MBITS{1'b0}});"
+                ]
+            }
         },
         "gpt-4o": {
-            "representation": "verilog",
-            "lemmas": [
-                "assume property (@(posedge clk) (sp >= 0 && sp < S_SIZE));",
-                "assume property (@(posedge clk) (push == 0 && pop == 0) |=> ($stable(reg_file[sp])));",
-                "assume property (@(posedge clk) (push == 1 && $past(push) == 1 && $past(pop) == 1 && sp != 0 && sp != (S_SIZE-2) && sp != (S_SIZE-1) && sp != S_SIZE) |=> (reg_file[sp] == $past(reg_file[sp],2)));"
-            ]
+            "verilog": {
+                "lemmas": [
+                    "assume property (@(posedge clk) (sp >= 0 && sp < S_SIZE));",
+                    "assume property (@(posedge clk) (push == 0 && pop == 0) |=> ($stable(reg_file[sp])));",
+                    "assume property (@(posedge clk) (push == 1 && $past(push) == 1 && $past(pop) == 1 && sp != 0 && sp != (S_SIZE-2) && sp != (S_SIZE-1) && sp != S_SIZE) |=> (reg_file[sp] == $past(reg_file[sp],2)));"
+                ]
+            }
+        },
+        "anthropic.claude-v2:1": {
+            "verilog": {
+                "lemmas": [
+                    "assume property (@(posedge clk) disable iff(sp == 0 || sp == 4094 || sp == 4095 || sp == 4096));",
+                    "assume property (@(posedge clk) (push |-> sp != sp\u2019));",
+                    "assume property (@(posedge clk) (pop |-> sp != sp\u2019));"
+                ]
+            }
         }
     },
     "buffer_256": {
+        "anthropic.claude-v2:1": {
+            "verilog": {
+                "lemmas": [
+                    "assume property (@(posedge clock) alloc_addr < 128);",
+                    "assume property (@(posedge clock) free_addr < 128);",
+                    "assume property (@(posedge clock) (count'+count) <= 128);"
+                ]
+            }
+        },
         "gpt-4o": {
-            "representation": "verilog",
-            "lemmas": [
-                "assume property (@(posedge clock) alloc |-> (count < `SIZE));",
-                "assume property (@(posedge clock) (count == $past(count) + (alloc & ~nack) - (free & busy[free_addr])));",
-                "assume property (@(posedge clock) (alloc & ~nack & $past(busy[alloc_addr])) |-> (free & free_addr == alloc_addr));"
-            ]
+            "verilog": {
+                "lemmas": [
+                    "assume property (@(posedge clock) alloc |-> (count < `SIZE));",
+                    "assume property (@(posedge clock) (count == $past(count) + (alloc & ~nack) - (free & busy[free_addr])));",
+                    "assume property (@(posedge clock) (alloc & ~nack & $past(busy[alloc_addr])) |-> (free & free_addr == alloc_addr));"
+                ]
+            }
         }
     }
 }

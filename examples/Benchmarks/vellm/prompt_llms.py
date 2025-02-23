@@ -12,6 +12,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Tuple
 import os
 from utils import ROOT_DIR 
+import time
 
 CACHE = os.path.join(ROOT_DIR, "llm_cache")
 
@@ -32,7 +33,7 @@ class LLMBase(ABC):
             return responses[0]  # deterministic: always return the first response
         return random.choices(responses, k=1)[0]
 
-    def get_response(self, prompt: str, temperature: float = 0.7, clear = False, force_cached = False, num_samples=5) -> Tuple[str, float]:
+    def get_response(self, prompt: str, temperature: float = 0.7, clear = False, force_cached = False) -> Tuple[str, float]:
         """
         Check cache or generate new responses.
         Returns the response and whether it was in the cache.
@@ -50,7 +51,7 @@ class LLMBase(ABC):
             self.cache.delete(query_hash)
         
         responses = self.cache[query_hash] if (cache_hit and not clear) \
-            else self._generate_responses(prompt, num_samples) if not force_cached else None
+            else self._generate_responses(prompt) if not force_cached else None
         if (not cache_hit or clear) and not force_cached:
             self.cache[query_hash] = responses  # store in cache
 
@@ -90,8 +91,8 @@ class Claude(LLMBase):
     def __init__(self, model_name: str, cache_dir: str = CACHE):
         super().__init__(model_name, cache_dir)
         
-
-    def _generate_responses(self, prompt: str, num_samples: int, temperature = 0.7) -> List[Tuple[str, float]]:
+    #TODO: max retries for anthropic.claude-v2:1 is 4? Throws throttling exception. 
+    def _generate_responses(self, prompt: str, num_samples: int = 2, temperature = 0.7) -> List[Tuple[str, float]]:
         if not hasattr(self, "client"):
             aws_config = {
                 "aws_access_key_id": os.getenv('AWS_ACCESS_KEY_ID'),
@@ -112,11 +113,17 @@ class Claude(LLMBase):
         #print(prompt)
         
         for _ in range(num_samples):
-            response = self.client.invoke_model(modelId=self.model_name, contentType='application/json', 
-                                                accept='application/json', body=json.dumps({"prompt": prompt, "max_tokens_to_sample": 4096})) #TODO: check default max tokens and add explicitly if needed
-            result = json.loads(response.get('body').read())
+            try:
+                response = self.client.invoke_model(modelId=self.model_name, contentType='application/json', 
+                                                    accept='application/json', body=json.dumps({"prompt": prompt, "max_tokens_to_sample": 4096})) #TODO: check default max tokens and add explicitly if needed
+                result = json.loads(response.get('body').read())
+            except Exception as e:
+                print(f"[ERROR] Prompting {self.model_name}: {e}")
+                continue
+
             responses.append((result.get('completion')))   #TODO: check if probability of completion can be returned
-        
+            time.sleep(2)
+
         return responses
 
 

@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from utils import extract_json_block, extract_lemmas, ROOT_DIR
 from prompt_llms import prompt_llms
 
+
 # Directory containing prompt files
 PROMPT_DIR = os.path.join(ROOT_DIR, "scripts/prompts")
 OUTPUT_CSV = os.path.join(ROOT_DIR, "scripts/results/proposed_lemmas.csv")
@@ -24,8 +25,10 @@ def add_lemmas(module_name, llm_model, lemmas, representation):
     if module_name not in lemma_data:
         lemma_data[module_name] = {}
 
-    lemma_data[module_name][llm_model] = {
-        "representation": representation,
+    if llm_model not in lemma_data[module_name]:
+        lemma_data[module_name][llm_model] = {}
+
+    lemma_data[module_name][llm_model][representation] = {
         "lemmas": lemmas
     }
 
@@ -38,10 +41,11 @@ def save_lemmas_to_csv(csv_file):
         writer.writerow(["Module Name", "LLM Model", "Lemma #", "Lemma", "Representation"])
 
         for module, llm_models in lemma_data.items():
-            for llm_model, details in llm_models.items():
-                representation = details["representation"]
-                for idx, lemma in enumerate(details["lemmas"], start=1):
-                    writer.writerow([module, llm_model, idx, lemma, representation])
+            for llm_model, representation_dict in llm_models.items():
+                for representation in representation_dict.keys():
+                #representation = details["representation"]
+                    for idx, lemma in enumerate(representation_dict[representation]["lemmas"], start=1):
+                        writer.writerow([module, llm_model, idx, lemma, representation])
 
     print(f"[INFO] Lemmas saved to {csv_file}")
 

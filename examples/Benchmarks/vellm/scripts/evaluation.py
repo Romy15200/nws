@@ -6,6 +6,8 @@ import os
 
 ebmc_executable = "/home/romy.peled/hw-cbmc/src/ebmc/ebmc" # Path to the EBMC executable
 
+JG_CORRECT_TIMEOUT = 300
+JG_HELPFUL_TIMEOUT = 300
 
 class VerilogModule:
     """Handles Verilog file modifications such as stripping assertions and adding assumptions."""
@@ -167,8 +169,9 @@ class LemmaEvaluator:
         new_tcl_path = f"{base_name}.lemma_temp.tcl"
         new_file_path = f"{base_name}.lemma_temp.sv"
 
+        timeout = JG_CORRECT_TIMEOUT if mode == "assert" else JG_HELPFUL_TIMEOUT
         self.module.add_property(lemma, new_file_path, new_tcl_path, mode)
-        return self.run_jg(new_tcl_path)
+        return self.run_jg(new_tcl_path, timeout=timeout)
 
 
     def is_correct_jg(self, lemma):
@@ -186,11 +189,11 @@ class LemmaEvaluator:
     def is_useful_jg(self, lemma):
         return self.process_lemma(lemma, "assume")
         
-    def run_jg(self, tcl_file_path):
+    def run_jg(self, tcl_file_path, timeout):
         command = f"jg -batch {tcl_file_path}"
         #print(tcl_file_path)
         try:
-            res = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=300, shell=True)
+            res = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=timeout, shell=True)
         except Exception as e:
             print(f"Error running JasperGold: {e}")
             return 
