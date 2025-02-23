@@ -171,7 +171,9 @@ class LemmaEvaluator:
 
         timeout = JG_CORRECT_TIMEOUT if mode == "assert" else JG_HELPFUL_TIMEOUT
         self.module.add_property(lemma, new_file_path, new_tcl_path, mode)
+
         return self.run_jg(new_tcl_path, timeout=timeout)
+
 
 
     def is_correct_jg(self, lemma):
@@ -224,7 +226,9 @@ class LemmaEvaluator:
             print(f"Error running EBMC: {e}")
             return False
         
-    
+def evaluate_all(json_file_path):
+    pass
+
 
 def main():
     sv_file ="/users/rompel/nws/examples/Benchmarks/vellm/hard_properties/gray_11-p3.sv"
