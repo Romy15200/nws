@@ -10,7 +10,11 @@ ebmc_executable = "/home/ubuntu/hw-cbmc/src/ebmc/ebmc" # Path to the EBMC execut
 
 JG_CORRECT_TIMEOUT = 300
 JG_HELPFUL_TIMEOUT = 300
+<<<<<<< HEAD
 BMC_BOUND = 5
+=======
+BMC_BOUND = 50
+>>>>>>> sync
 
 class VerificationResult(Enum):
     PROVEN = 1
@@ -205,10 +209,14 @@ class LemmaEvaluator:
         try:
             res = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=timeout, shell=True)
         except subprocess.TimeoutExpired as e:
+<<<<<<< HEAD
             print(f"JasperGold timed out after {e.timeout} seconds")
+=======
+            print(f"[INFO] Command timed out after {e.timeout} seconds")
+>>>>>>> sync
             return VerificationResult.TIMEOUT 
         except Exception as e:
-            print(f"Error running JasperGold: {e}")
+            print(f"[INFO] Error running JasperGold: {e}")
             return VerificationResult.ERROR 
 
        
