@@ -25,6 +25,7 @@ module SEVEN(input clk, input rst, input [13:0] both7seg, output reg[6:0] segmen
 			end
 		end
 	end
+assume property (@(posedge clk) (cnt == freq) |-> (digit_select == !digit_select)); 
 	assert property (@(posedge clk) (always s_eventually rst == 1) or (always s_eventually (digit_select == 0 and (always s_eventually digit_select == 1)))) ;
 	//F G (rst = FALSE) -> G F (digit_select = FALSE & G F (digit_select = TRUE))
 endmodule

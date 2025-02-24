@@ -3,6 +3,7 @@ import subprocess
 import re
 import shutil
 import os
+from utils import ROOT_DIR
 
 ebmc_executable = "/home/romy.peled/hw-cbmc/src/ebmc/ebmc" # Path to the EBMC executable
 
@@ -31,7 +32,7 @@ class VerilogModule:
     def _find_assertion_index(self):
         pattern = re.compile(r"^\s*assert property")  # Match start of line, optional whitespace, then 'assert property'
         #TODO: see whether to support property label
-        
+        #print(self.lines)
         matched_indices = [i for i, line in enumerate(self.lines) if pattern.match(line)]
 
         if len(matched_indices) == 0:
@@ -68,7 +69,7 @@ class VerilogModule:
         Raises:
             ValueError: If there is not exactly one occurrence of 'assume' or 'assert'.
         """
-
+        #print(text)
         if action not in {"assume", "assert"}:
             raise ValueError("action must be 'assume' or 'assert'")
 
@@ -95,7 +96,7 @@ class VerilogModule:
 
         modified_lines.insert(self._assertion_index, new_lines)
         #print(modified_lines)
-        with open(new_file_path, "w") as f:
+        with open(new_file_path, "w", encoding="utf-8") as f:
             f.writelines(modified_lines)
        
         if new_tcl_path:
@@ -192,16 +193,23 @@ class LemmaEvaluator:
         return self.process_lemma(lemma, "assume")
         
     def run_jg(self, tcl_file_path, timeout):
+        subprocess.run("rm -rf jgproject", shell=True)
         command = f"jg -batch {tcl_file_path}"
         #print(tcl_file_path)
         try:
             res = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=timeout, shell=True)
+        except subprocess.TimeoutExpired as e:
+            print(f"Command timed out after {e.timeout} seconds")
+            return 
         except Exception as e:
             print(f"Error running JasperGold: {e}")
             return 
 
        
         proven = any("- proven" in line and "1 (100%)" in line for line in res.stdout.splitlines()) #TODO: find a better way to extract result
+        #print(res.stdout.splitlines())
+        #print(res.stderr.splitlines())
+
         
         return proven
     
@@ -226,21 +234,6 @@ class LemmaEvaluator:
             print(f"Error running EBMC: {e}")
             return False
         
-def evaluate_all(json_file_path):
-    pass
 
 
-def main():
-    sv_file ="/users/rompel/nws/examples/Benchmarks/vellm/hard_properties/gray_11-p3.sv"
-    tcl_file="/users/rompel/nws/examples/Benchmarks/vellm/hard_properties/tcl_files/gray_11-p3.tcl"
-    lemma = "assume property (@(posedge clk) (cnt > 0));"
-    lemma_evaluator = LemmaEvaluator(sv_file, tcl_file)
-    correct = lemma_evaluator.is_correct_jg(lemma)
-    useful = lemma_evaluator.is_useful_jg(lemma)
-    print(useful)
 
-
-   
-
-if __name__ == "__main__":
-    main()
