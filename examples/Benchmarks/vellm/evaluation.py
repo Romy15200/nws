@@ -8,9 +8,6 @@ from enum import Enum
 
 ebmc_executable = "/home/romy.peled/hw-cbmc/src/ebmc/ebmc" # Path to the EBMC executable
 
-JG_CORRECT_TIMEOUT = 3
-JG_HELPFUL_TIMEOUT = 3
-BMC_BOUND = 50
 
 class VerificationResult(Enum):
     PROVEN = 1
@@ -225,7 +222,7 @@ class LemmaEvaluator:
 
     
 
-    def run_ebmc(self, sv_file_path, module_config=None):
+    def run_ebmc(self, sv_file_path, module_config=None, bmc_bound = BMC_BOUND):
         """Runs EBMC on the given Verilog file and returns True if it passes verification.""" 
         try:
             command = list(filter(None, [   
