@@ -4,11 +4,19 @@ import re
 import shutil
 import os
 from utils import ROOT_DIR
+from enum import Enum
 
 ebmc_executable = "/home/romy.peled/hw-cbmc/src/ebmc/ebmc" # Path to the EBMC executable
 
-JG_CORRECT_TIMEOUT = 300
-JG_HELPFUL_TIMEOUT = 300
+JG_CORRECT_TIMEOUT = 3
+JG_HELPFUL_TIMEOUT = 3
+BMC_BOUND = 50
+
+class VerificationResult(Enum):
+    PROVEN = 1
+    CEX = 2
+    TIMEOUT = 3
+    ERROR = 4
 
 class VerilogModule:
     """Handles Verilog file modifications such as stripping assertions and adding assumptions."""
@@ -149,7 +157,7 @@ class VerilogModule:
 class LemmaEvaluator:
     """Evaluates a lemma using JG/EBMC."""
 
-    def __init__(self, verilog_file, tcl_file=None):
+    def __init__(self, verilog_file, tcl_file=None, ):
         self.module = VerilogModule(verilog_file, tcl_file)
         #self.ebmc_path = ebmc_path
         
@@ -200,18 +208,16 @@ class LemmaEvaluator:
             res = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=timeout, shell=True)
         except subprocess.TimeoutExpired as e:
             print(f"Command timed out after {e.timeout} seconds")
-            return 
+            return VerificationResult.TIMEOUT 
         except Exception as e:
             print(f"Error running JasperGold: {e}")
-            return 
+            return VerificationResult.ERROR 
 
        
         proven = any("- proven" in line and "1 (100%)" in line for line in res.stdout.splitlines()) #TODO: find a better way to extract result
-        #print(res.stdout.splitlines())
-        #print(res.stderr.splitlines())
-
+        res = VerificationResult.PROVEN if proven else VerificationResult.CEX
         
-        return proven
+        return res
     
 
     def extract_property(self, lemma):
