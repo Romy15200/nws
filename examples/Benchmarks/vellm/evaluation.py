@@ -6,8 +6,11 @@ import os
 from utils import ROOT_DIR
 from enum import Enum
 
-ebmc_executable = "/home/romy.peled/hw-cbmc/src/ebmc/ebmc" # Path to the EBMC executable
+ebmc_executable = "/home/ubuntu/hw-cbmc/src/ebmc/ebmc" # Path to the EBMC executable
 
+JG_CORRECT_TIMEOUT = 300
+JG_HELPFUL_TIMEOUT = 300
+BMC_BOUND = 5
 
 class VerificationResult(Enum):
     PROVEN = 1
@@ -21,10 +24,10 @@ class VerilogModule:
     def __init__(self, filepath, tcl_filepath=None):   #TODO: add support for reset & config info
         self.filepath = filepath
         with open(filepath, "r") as f:
-            self.lines = f.readlines()
-       
+                self.lines = f.readlines()
+                
         #self.stripped_lines = self.module.strip_assertion()
-        
+        self.top = self._get_top()
         self.tcl = {"tcl_filepath": tcl_filepath, "tcl_lines": None}
         if tcl_filepath:
             with open(tcl_filepath, "r") as f:
@@ -33,6 +36,15 @@ class VerilogModule:
         self._assertion_index = self._find_assertion_index()
         assert self._assertion_index > 0 and self._assertion_index < len(self.lines)
 
+    def get_config(self):
+        return {"top": self.top}
+    
+    def _get_top(self):
+        for line in self.lines:
+            words = line.split()
+            if "module" in words:  
+                top = words[words.index("module") + 1]  # Extract next word
+                return top
 
     def _find_assertion_index(self):
         pattern = re.compile(r"^\s*assert property")  # Match start of line, optional whitespace, then 'assert property'
@@ -146,23 +158,18 @@ class VerilogModule:
     #     self._add_property(assertion, new_file_path)
     # """
 
-    def get_config():
-        return None
 
 
 
 class LemmaEvaluator:
     """Evaluates a lemma using JG/EBMC."""
 
-    def __init__(self, verilog_file, tcl_file=None, ):
+    def __init__(self, tool, verilog_file, tcl_file=None, ebmc_path=ebmc_executable):
         self.module = VerilogModule(verilog_file, tcl_file)
-        #self.ebmc_path = ebmc_path
+        self.ebmc_path = ebmc_path
+        self.tool = tool
         
 
-    def is_correct_ebmc(self, lemmas):
-        # temp_file = "temp_no_assert.sv"
-        # return {lemma: self.run_ebmc(self.module.add_assertion(lemma, temp_file), self.module.get_config()) for lemma in lemmas}
-        pass
 
     def process_lemma(self, lemma, mode):   
         """
@@ -178,23 +185,17 @@ class LemmaEvaluator:
         timeout = JG_CORRECT_TIMEOUT if mode == "assert" else JG_HELPFUL_TIMEOUT
         self.module.add_property(lemma, new_file_path, new_tcl_path, mode)
 
-        return self.run_jg(new_tcl_path, timeout=timeout)
+        if self.tool == "jg":
+            return self.run_jg(new_tcl_path, timeout=timeout)
+        elif self.tool == "ebmc":
+            return self.run_ebmc(new_file_path, timeout=timeout)
 
 
-
-    def is_correct_jg(self, lemma):
-        # base_name = os.path.splitext(self.module.filepath)[0]
-        # new_tcl_path = f"{base_name}.lemma_temp.tcl"
-        # new_file_path = f"{base_name}.lemma_temp.sv"
-        
-        # self.module.add_property(lemma, new_file_path, new_tcl_path, "assert") 
-        # #print(new_tcl_path)
-        # #print(new_file_path)
-        # self.run_jg(new_tcl_path)
+    def is_correct(self, lemma):
         return self.process_lemma(lemma, "assert")
 
     
-    def is_useful_jg(self, lemma):
+    def is_useful(self, lemma):
         return self.process_lemma(lemma, "assume")
         
     def run_jg(self, tcl_file_path, timeout):
@@ -204,7 +205,7 @@ class LemmaEvaluator:
         try:
             res = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=timeout, shell=True)
         except subprocess.TimeoutExpired as e:
-            print(f"Command timed out after {e.timeout} seconds")
+            print(f"JasperGold timed out after {e.timeout} seconds")
             return VerificationResult.TIMEOUT 
         except Exception as e:
             print(f"Error running JasperGold: {e}")
@@ -217,26 +218,44 @@ class LemmaEvaluator:
         return res
     
 
-    def extract_property(self, lemma):
-        pass
-
-    
-
-    def run_ebmc(self, sv_file_path, module_config=None, bmc_bound = BMC_BOUND):
+    def run_ebmc(self, sv_file_path, timeout, bmc_bound = BMC_BOUND):
         """Runs EBMC on the given Verilog file and returns True if it passes verification.""" 
-        try:
-            command = list(filter(None, [   
-                self.ebmc_path,
-                module_config if module_config else None
-            ]))
-           
-            result = subprocess.run(command, capture_output=True, text=True)
-            return "" in result.stdout
+        config = self.module.get_config()
+
+        # command = list(filter(None, [   
+        #     self.ebmc_path,
+        #     sv_file_path,
+        #     f"--bound {bmc_bound}",
+        #     f"--top {config["top"]}"
+        # #    module_config if module_config else None
+        # ]))
         
+        command = f"{self.ebmc_path} {sv_file_path} --bound {bmc_bound}, --top {config["top"]}"
+       
+        try:    
+            result = subprocess.run(command, capture_output=True, text=True, timeout=timeout, shell=True)
+            #print(result.stdout) 
+            #print(result.stderr)
+            #print(result.returncode)
+        except subprocess.TimeoutExpired as e:
+            print(f"EBMC timed out after {e.timeout} seconds")
+            return VerificationResult.TIMEOUT 
         except Exception as e:
             print(f"Error running EBMC: {e}")
-            return False
+            return VerificationResult.ERROR
         
-
+        if result.stderr != "":
+            print(f"Error running EBMC on file {sv_file_path}: {result.stderr}")
+            return VerificationResult.ERROR
+        
+        print(result.stdout)
+        if f"PROVED up to bound {bmc_bound}" in result.stdout:
+            return VerificationResult.PROVEN
+        
+       
+        if f"REFUTED" in result.stdout:
+            return VerificationResult.CEX
+        
+        
 
 
