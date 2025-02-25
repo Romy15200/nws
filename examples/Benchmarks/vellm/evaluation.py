@@ -10,8 +10,8 @@ import hashlib
 
 ebmc_executable = "/home/ubuntu/hw-cbmc/src/ebmc/ebmc" # Path to the EBMC executable
 
-JG_CORRECT_TIMEOUT = 300
-JG_HELPFUL_TIMEOUT = 300
+JG_CORRECT_TIMEOUT = 5
+JG_HELPFUL_TIMEOUT = 5
 BMC_BOUND = 50
 
 
@@ -155,8 +155,22 @@ class LemmaEvaluator:
         return hashlib.sha256(f"{lemma}-{mode}-{self.module.module_name}-{self.tool}".encode()).hexdigest()
 
     def _cache_result(self, lemma: str, mode: str, res: VerificationResult):
+        #print(res)
+        #print(res.value)
+        #print(type(res))
+        #print(type(res.value))
         cache_key = self._hash_query(lemma, mode)
-        self.cache[cache_key] = VerificationResult
+        self.cache[cache_key] = res.value
+        #self.cache.add(cache_key, res.value)
+        #print(self.cache[cache_key])
+        #print(type(self.cache[cache_key]))
+
+    def _get_from_cache(self, lemma: str, mode: str):
+        cache_key = self._hash_query(lemma, mode)
+        if cache_key not in self.cache:
+            return None
+        
+        return VerificationResult(self.cache[cache_key])    
 
     def process_lemma(self, lemma, mode):   
         """
@@ -165,9 +179,10 @@ class LemmaEvaluator:
             lemma (str): The lemma to add to the sv file.
             mode (str): Either "assert" or "assume".
         """
-        cache_key = self._hash_query(lemma, mode)
-        if (self.from_cache or self.only_cache) and cache_key in self.cache:
-            return self.cache[cache_key]
+        if (self.from_cache or self.only_cache):
+            res = self._get_from_cache(lemma, mode)
+            if res is not None:
+                return self._get_from_cache(lemma, mode)
 
         if self.only_cache:
             return VerificationResult.UNCACHED
@@ -197,7 +212,8 @@ class LemmaEvaluator:
         return self.process_lemma(lemma, "assume")
         
     def run_jg(self, tcl_file_path, timeout):
-        subprocess.run("rm -rf jgproject", shell=True)
+
+        subprocess.run("rm -rf jgproject", shell=True)       
         command = f"jg -batch {tcl_file_path}"
         #print(tcl_file_path)
         try:
@@ -209,6 +225,8 @@ class LemmaEvaluator:
             print(f"[INFO] Error running JasperGold: {e}")
             return VerificationResult.ERROR 
         
+        #print(res.stdout.splitlines())
+        #print(type(res.stdout.splitlines()))
         #TODO: Find a better way to extract result and handle errors
         if any("ERROR" in line for line in res.stdout.splitlines()):
             return VerificationResult.ERROR
