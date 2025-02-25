@@ -88,8 +88,8 @@ if __name__ == "__main__":
                                            "correct": lemma_evaluator.is_correct(lemma).value,
                                            "useful": lemma_evaluator.is_useful(lemma).value})
                 evaluation_dict[module][model][representation] = updated_lemmas
-    
-   
+
+
     with open(output_json_path, "w") as f:
         json.dump(evaluation_dict, f, indent=4)
 

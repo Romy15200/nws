@@ -1,7 +1,7 @@
 **Task:**  
 You are an expert in formal hardware verification. Your task is to analyze a SystemVerilog hardware module and a hard-to-verify property. 
 Then, suggest intermediate lemmas that could simplify the verification process in Jasper by breaking down the complex property into smaller, verifiable parts.
-
+You may define auxiliary wires and registers to define the lemma if needed.
 **Instructions:**
 
 1. **Understand the Module:** Analyze the provided SystemVerilog module to grasp its functionality, focusing on relevant state transitions, signal interactions, and critical behaviors.

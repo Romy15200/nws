@@ -27,7 +27,7 @@ class LLMBase(ABC):
         return hashlib.sha256(f"{prompt}-{self.model_name}".encode()).hexdigest()
     
     def _sample_from_responses(self, responses: List[Tuple[str, float]], temperature: float) -> Tuple[str, float]:
-        """Sample a response based on temperature with a fixed random seed."""
+        """Sample a response uniformly at random"""
         random.seed(42)  
         if temperature == 0:
             return responses[0]  # deterministic: always return the first response
@@ -44,9 +44,6 @@ class LLMBase(ABC):
         query_hash = self._hash_query(prompt)
         cache_hit = query_hash in self.cache
 
-        #print(f"cache hit: {cache_hit}")
-        #print(f"clear: {clear}")
-        #print(self.cache[query_hash])
         if clear:
             self.cache.delete(query_hash)
         
@@ -59,6 +56,24 @@ class LLMBase(ABC):
         response = self._sample_from_responses(responses, temperature) if responses else None
 
         return {"cache_hit": cache_hit, "response": response}
+
+    def cache_more(self, prompt: str, num_samples: int = 1, temperature=0.7):
+        """Generate multiple responses for a prompt and add to cache"""
+        query_hash = self._hash_query(prompt)
+        responses = self._generate_responses(prompt, num_samples=num_samples)
+        if query_hash in self.cache:
+            self.cache[query_hash].extend(responses)
+        else:
+            self.cache.add(query_hash, responses)
+    
+    def get_num_samples(self, prompt:str) -> int:
+        query_hash = self._hash_query(prompt)
+        if query_hash not in self.cache:
+            return 0
+        else:
+            return len(self.cache[query_hash])
+
+
 
     @abstractmethod
     def _generate_responses(self, prompt: str, num_samples: int = 5, temperature=0.7) -> List[Tuple[str, float]]: 
@@ -133,7 +148,7 @@ class GPT(LLMBase):
         #self.openai_api_key = os.getenv('OPENAI_API_KEY')
         self.client = None
 
-    def _generate_responses(self, prompt: str, num_samples: int, temperature = 0.7) -> List[Tuple[str, float]]:
+    def _generate_responses(self, prompt: str, num_samples: int = 5, temperature = 0.7) -> List[Tuple[str, float]]:
         
         if self.client is None:
             self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
