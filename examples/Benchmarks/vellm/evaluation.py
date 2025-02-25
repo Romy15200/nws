@@ -5,6 +5,8 @@ import shutil
 import os
 from utils import ROOT_DIR
 from enum import Enum
+from diskcache import Cache
+import hashlib
 
 ebmc_executable = "/home/ubuntu/hw-cbmc/src/ebmc/ebmc" # Path to the EBMC executable
 
@@ -18,12 +20,14 @@ class VerificationResult(Enum):
     CEX = 2
     TIMEOUT = 3
     ERROR = 4
+    UNCACHED = 5
 
 class VerilogModule:
     """Handles Verilog file modifications such as stripping assertions and adding assumptions."""
 
     def __init__(self, filepath, tcl_filepath=None):   #TODO: add support for reset & config info
         self.filepath = filepath
+        self.module_name = os.path.splitext(os.path.basename(filepath))[0]
         with open(filepath, "r") as f:
                 self.lines = f.readlines()
                 
@@ -134,14 +138,25 @@ class VerilogModule:
 class LemmaEvaluator:
     """Evaluates a lemma using JG/EBMC."""
 
-    def __init__(self, tool, verilog_file, tcl_file=None, ebmc_path=ebmc_executable):
+    def __init__(self, tool, verilog_file, tcl_file=None, ebmc_path=ebmc_executable, from_cache = False, only_cache = False, cache_result=False):
         if tool not in ["jg", "ebmc"]:
             raise ValueError("Please specify a model checker to use") 
         self.module = VerilogModule(verilog_file, tcl_file)
         self.ebmc_path = ebmc_path
         self.tool = tool
-        
+        self.cache = Cache(os.path.join(ROOT_DIR, 'eval_cache'))
+        self.from_cache = from_cache
+        self.only_cache = only_cache
+        self.cache_result = cache_result
 
+    def _hash_query(self, lemma: str, mode: str) -> str:
+        """Generate a hash for the lemma, mode and module name to use as a cache key."""
+        #return hashlib.sha256(prompt.encode()).hexdigest()
+        return hashlib.sha256(f"{lemma}-{mode}-{self.module.module_name}-{self.tool}".encode()).hexdigest()
+
+    def _cache_result(self, lemma: str, mode: str, res: VerificationResult):
+        cache_key = self._hash_query(lemma, mode)
+        self.cache[cache_key] = VerificationResult
 
     def process_lemma(self, lemma, mode):   
         """
@@ -150,6 +165,13 @@ class LemmaEvaluator:
             lemma (str): The lemma to add to the sv file.
             mode (str): Either "assert" or "assume".
         """
+        cache_key = self._hash_query(lemma, mode)
+        if (self.from_cache or self.only_cache) and cache_key in self.cache:
+            return self.cache[cache_key]
+
+        if self.only_cache:
+            return VerificationResult.UNCACHED
+            
         base_name = os.path.splitext(self.module.filepath)[0]
         new_tcl_path = f"{base_name}.lemma_temp.tcl"
         new_file_path = f"{base_name}.lemma_temp.sv"
@@ -158,10 +180,14 @@ class LemmaEvaluator:
         self.module.add_property(lemma, new_file_path, new_tcl_path, mode)
 
         if self.tool == "jg":
-            return self.run_jg(new_tcl_path, timeout=timeout)
+            res = self.run_jg(new_tcl_path, timeout=timeout)
         elif self.tool == "ebmc":
-            return self.run_ebmc(new_file_path, timeout=timeout)
+            res = self.run_ebmc(new_file_path, timeout=timeout)
 
+        if self.cache_result:
+            self._cache_result(lemma, mode, res)
+        
+        return res
 
     def is_correct(self, lemma):
         return self.process_lemma(lemma, "assert")
