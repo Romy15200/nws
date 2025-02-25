@@ -10,11 +10,8 @@ ebmc_executable = "/home/ubuntu/hw-cbmc/src/ebmc/ebmc" # Path to the EBMC execut
 
 JG_CORRECT_TIMEOUT = 300
 JG_HELPFUL_TIMEOUT = 300
-<<<<<<< HEAD
-BMC_BOUND = 5
-=======
 BMC_BOUND = 50
->>>>>>> sync
+
 
 class VerificationResult(Enum):
     PROVEN = 1
@@ -53,6 +50,7 @@ class VerilogModule:
     def _find_assertion_index(self):
         pattern = re.compile(r"^\s*assert property")  # Match start of line, optional whitespace, then 'assert property'
         #TODO: see whether to support property label
+        #print(self.filepath)
         #print(self.lines)
         matched_indices = [i for i, line in enumerate(self.lines) if pattern.match(line)]
 
@@ -131,44 +129,14 @@ class VerilogModule:
         with open(new_tcl_path, "w") as f:
             f.writelines(modified_lines)
 
-    # """
-    # def add_assumption(self, lemma, new_file_path, new_tcl_path = None):
-    #     """Writes to new_file_path the verilog module with the lemma inserted as an assumption.
-    #     If new_tcl_path is supplied, a suitable tcl is written to it"""
-    #     assumption = f"assume ({self.strip_property(lemma)});\n"
-    #     self._add_property(assumption, new_file_path, new_tcl_path)
-        
-        
-        
-        
-    #     endmodule_index = next(
-    #         i for i in range(len(self.lines) - 1, -1, -1) if self.lines[i].strip() == "endmodule"
-    #     )
-    #     new_lines = self.lines[:endmodule_index] + [assumption] + self.lines[endmodule_index:]
-    
-    #     with open(new_file_path, "w") as f:
-    #         f.writelines(new_lines)
-    #     # # Find "endmodule" and insert the lemma before it
-    #     # for i in range(len(lines) - 1, -1, -1):
-    #     #     if re.match(r"^\s*endmodule\s*$", lines[i]):
-    #     #         lines.insert(i, f"{lemma}\n")
-    #     #         break
-    #     # self.lines.append(assumption)  # Append the assumption at the end
-        
-        
-    # def add_assertion(self, lemma, new_file_path):
-    #     """Writes to new_file_path the verilog module with the given lemma as an assertion"""
-    #     assertion = f"assert ({self.strip_property(lemma)});\n"
-    #     self._add_property(assertion, new_file_path)
-    # """
-
-
 
 
 class LemmaEvaluator:
     """Evaluates a lemma using JG/EBMC."""
 
     def __init__(self, tool, verilog_file, tcl_file=None, ebmc_path=ebmc_executable):
+        if tool not in ["jg", "ebmc"]:
+            raise ValueError("Please specify a model checker to use") 
         self.module = VerilogModule(verilog_file, tcl_file)
         self.ebmc_path = ebmc_path
         self.tool = tool
@@ -209,20 +177,25 @@ class LemmaEvaluator:
         try:
             res = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=timeout, shell=True)
         except subprocess.TimeoutExpired as e:
-<<<<<<< HEAD
             print(f"JasperGold timed out after {e.timeout} seconds")
-=======
-            print(f"[INFO] Command timed out after {e.timeout} seconds")
->>>>>>> sync
             return VerificationResult.TIMEOUT 
         except Exception as e:
             print(f"[INFO] Error running JasperGold: {e}")
             return VerificationResult.ERROR 
-
-       
-        proven = any("- proven" in line and "1 (100%)" in line for line in res.stdout.splitlines()) #TODO: find a better way to extract result
-        res = VerificationResult.PROVEN if proven else VerificationResult.CEX
         
+        #TODO: Find a better way to extract result and handle errors
+        if any("ERROR" in line for line in res.stdout.splitlines()):
+            return VerificationResult.ERROR
+        #print(res.stdout.splitlines())
+        
+        proven = any("- proven" in line and "1 (100%)" in line for line in res.stdout.splitlines()) 
+        assert not proven or  (not any("get_property_list -include {status {proven}}" in line for line in res.stdout.splitlines())) or \
+                              (not any("No properties matched the specified filters." in line for line in res.stdout.splitlines()))
+        
+        assert proven or (not any("get_property_list -include" in line for line in res.stdout.splitlines())) or ((not any("get_property_list -include {status {cex}}") in line for line in res.stdout.splitlines()) or 
+                          (not any("No properties matched the specified filters." in line for line in res.stdout.splitlines())))
+        
+        res = VerificationResult.PROVEN if proven else VerificationResult.CEX
         return res
     
 
@@ -238,7 +211,7 @@ class LemmaEvaluator:
         # #    module_config if module_config else None
         # ]))
         
-        command = f"{self.ebmc_path} {sv_file_path} --bound {bmc_bound}, --top {config["top"]}"
+        command = f"{self.ebmc_path} {sv_file_path} --bound {bmc_bound}, --top {config['top']}"
        
         try:    
             result = subprocess.run(command, capture_output=True, text=True, timeout=timeout, shell=True)
@@ -267,3 +240,6 @@ class LemmaEvaluator:
         
 
 
+if __name__ == "__main__":
+    lemma_eval = LemmaEvaluator("jg", '/users/rompel/nws/examples/Benchmarks/vellm/hard_properties/gray_11-p3.sv', '/users/rompel/nws/examples/Benchmarks/vellm/hard_properties/tcl_files/gray_11-p3.tcl')
+    print(lemma_eval.run_jg('/users/rompel/nws/examples/Benchmarks/vellm/hard_properties/tcl_files/gray_11-p3.tcl', timeout=100).value)
