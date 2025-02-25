@@ -10,8 +10,8 @@ import hashlib
 
 ebmc_executable = "/home/ubuntu/hw-cbmc/src/ebmc/ebmc" # Path to the EBMC executable
 
-JG_CORRECT_TIMEOUT = 5
-JG_HELPFUL_TIMEOUT = 5
+JG_CORRECT_TIMEOUT = 1800
+JG_HELPFUL_TIMEOUT = 1800
 BMC_BOUND = 50
 
 

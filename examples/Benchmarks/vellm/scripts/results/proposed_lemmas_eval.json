@@ -4,12 +4,12 @@
             "verilog": [
                 {
                     "lemma": "assume property (@(posedge clk) (!rst -> always eventually (gray_cnt==0)));",
-                    "correct": 3,
-                    "useful": 3
+                    "correct": 4,
+                    "useful": 4
                 },
                 {
                     "lemma": "assume property (@(posedge clk) (gray_cnt==0 -> sig));",
-                    "correct": 3,
+                    "correct": 2,
                     "useful": 3
                 },
                 {
@@ -23,13 +23,13 @@
             "verilog": [
                 {
                     "lemma": "assume property (@(posedge clk) (always s_eventually gray_cnt == 0));",
-                    "correct": 3,
-                    "useful": 3
+                    "correct": 2,
+                    "useful": 1
                 },
                 {
                     "lemma": "assume property (@(posedge clk) (always s_eventually (sig == 1 and s_eventually sig == 0)));",
-                    "correct": 3,
-                    "useful": 3
+                    "correct": 2,
+                    "useful": 1
                 }
             ]
         },
@@ -37,17 +37,17 @@
             "verilog": [
                 {
                     "lemma": "assume property (@(posedge clk) (cnt > 0));",
-                    "correct": 3,
-                    "useful": 3
+                    "correct": 2,
+                    "useful": 1
                 },
                 {
                     "lemma": "assume property (@(posedge clk) (gray_cnt == 0) -> (sig == 1));",
-                    "correct": 3,
+                    "correct": 2,
                     "useful": 3
                 },
                 {
                     "lemma": "assume property (@(posedge clk) (gray_cnt!= 0) -> (sig == 0));",
-                    "correct": 3,
+                    "correct": 2,
                     "useful": 3
                 }
             ]
@@ -58,17 +58,17 @@
             "verilog": [
                 {
                     "lemma": "assume property (@(posedge clk) (counter[2:0] == 0));",
-                    "correct": 3,
-                    "useful": 3
+                    "correct": 4,
+                    "useful": 4
                 },
                 {
                     "lemma": "assume property (@(posedge clk) (sound == S_WIN | sound == S_LOSS));",
-                    "correct": 3,
-                    "useful": 3
+                    "correct": 4,
+                    "useful": 4
                 },
                 {
                     "lemma": "assume property (@(posedge clk) (nl[3:0] == 15));",
-                    "correct": 3,
+                    "correct": 4,
                     "useful": 4
                 },
                 {
@@ -112,13 +112,13 @@
             "verilog": [
                 {
                     "lemma": "assume property ((nloss == 1) |-> ((nl[0] == 0) && (nl[1] == 0) && (nl[2] == 0) && (nl[3] == 0))); ",
-                    "correct": 3,
+                    "correct": 2,
                     "useful": 3
                 },
                 {
                     "lemma": "assume property ((nl[0] == 1) || (nl[1] == 1) || (nl[2] == 1) || (nl[3] == 1));",
-                    "correct": 3,
-                    "useful": 3
+                    "correct": 2,
+                    "useful": 2
                 }
             ]
         },
@@ -126,17 +126,17 @@
             "verilog": [
                 {
                     "lemma": "assume property (@(posedge clock) (gamma == `G10 | gamma == `Ea | gamma == `E0 | gamma == `E1) |-> (nl != 4'b1111));",
-                    "correct": 3,
+                    "correct": 1,
                     "useful": 3
                 },
                 {
                     "lemma": "assume property (@(posedge clock) (gamma == `G5 | gamma == `G6 | gamma == `G7) |-> (count > 0));",
-                    "correct": 3,
-                    "useful": 3
+                    "correct": 2,
+                    "useful": 1
                 },
                 {
                     "lemma": "assume property (@(posedge clock) (wr == 1) |-> (memory[address] != 4'b1111));",
-                    "correct": 3,
+                    "correct": 1,
                     "useful": 3
                 }
             ]
@@ -147,12 +147,12 @@
             "verilog": [
                 {
                     "lemma": "assume property (@(posedge clk) cnt < freq |=> (always s_eventually cnt == freq));",
-                    "correct": 3,
+                    "correct": 2,
                     "useful": 3
                 },
                 {
                     "lemma": "assume property (@(posedge clk) always ((cnt == freq) |=> (X digit_select != digit_select)));)",
-                    "correct": 3,
+                    "correct": 4,
                     "useful": 4
                 },
                 {
@@ -166,22 +166,22 @@
             "verilog": [
                 {
                     "lemma": "assume property (@(posedge clk) (rst == 1));",
-                    "correct": 3,
-                    "useful": 3
+                    "correct": 2,
+                    "useful": 1
                 },
                 {
                     "lemma": "assume property (@(posedge clk) (cnt < freq));",
-                    "correct": 3,
-                    "useful": 3
+                    "correct": 2,
+                    "useful": 1
                 },
                 {
                     "lemma": "assume property (@(posedge clk) (digit_select == 0));",
-                    "correct": 3,
-                    "useful": 3
+                    "correct": 2,
+                    "useful": 1
                 },
                 {
                     "lemma": "assume property (@(posedge clk) (segment == both7seg[13:7]));",
-                    "correct": 3,
+                    "correct": 2,
                     "useful": 3
                 }
             ]
@@ -190,17 +190,17 @@
             "verilog": [
                 {
                     "lemma": "assert property (@(posedge clk) (cnt == freq) |-> (digit_select == !digit_select));",
-                    "correct": 3,
-                    "useful": 3
+                    "correct": 2,
+                    "useful": 1
                 },
                 {
                     "lemma": "assume property (@(posedge clk) (always s_eventually rst == 1));",
-                    "correct": 3,
-                    "useful": 3
+                    "correct": 2,
+                    "useful": 1
                 },
                 {
                     "lemma": "assert property (@(posedge clk) (cnt == freq) |-> (cnt == 0));",
-                    "correct": 3,
+                    "correct": 2,
                     "useful": 3
                 }
             ]
