@@ -65,7 +65,7 @@ def process_prompts(prompt_dir, force_cached):
         if not prompt_file.endswith(".json"):  # Ensure it's a JSON prompt file
             continue
         
-        if "Llama-3.3-70B" in prompt_file: # Llama 70B takes too long on current resources
+        if "Llama-3.3-70B" in prompt_file: # Llama 70B takes too long with current resources
             continue 
 
         prompt_path = os.path.join(prompt_dir, prompt_file)
