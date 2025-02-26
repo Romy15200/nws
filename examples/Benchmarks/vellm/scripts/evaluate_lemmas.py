@@ -52,20 +52,25 @@ def display_in_table(json_file):
 
 
 if __name__ == "__main__":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    #sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
     parser = argparse.ArgumentParser()
     parser.add_argument("--ebmc", action="store_true", help="Use EBMC model checker")
     parser.add_argument("--jg", action="store_true", help="Use JasperGold")
     parser.add_argument("--from_cache", action="store_true", help="Take verification result from cache, if cached")
     parser.add_argument("--only_cache", action="store_true", help="Get verification result only if cached. Returns a designated value if uncached")
     parser.add_argument("--cache_result", action="store_true", help="Caches verification result")
+    parser.add_argument("--from_cache_skip_timeouts", action="store_true", help="Returns verification result from cache if exists and not timeout")
 
     args = parser.parse_args()
+    if args.jg and args.ebmc:
+        print("Error: The arguments '--jg' and '--ebmc' are mutually exclusive. Please provide only one.")
+        exit(1)  
 
     input_json_path = os.path.join(ROOT_DIR, "scripts/results/proposed_lemmas.json")
-    output_json_path = os.path.join(ROOT_DIR, "scripts/results/proposed_lemmas_eval.json")
+   
     
     tool = "ebmc" if args.ebmc else "jg"  
+    output_json_path = os.path.join(ROOT_DIR, f"scripts/results/proposed_lemmas_eval_{tool}.json")
 
     with open(input_json_path, "r") as f:
         lemmas_dict = json.load(f)
@@ -76,14 +81,14 @@ if __name__ == "__main__":
         print(f"Processing module {module}")
         sv_file = os.path.join(ROOT_DIR, f"hard_properties/{module}.sv")
         tcl_file = os.path.join(ROOT_DIR, f"hard_properties/tcl_files/{module}.tcl")
-        lemma_evaluator = LemmaEvaluator(tool, sv_file, tcl_file, from_cache=args.from_cache, only_cache=args.only_cache, cache_result=args.cache_result)
+        lemma_evaluator = LemmaEvaluator(tool, sv_file, tcl_file, from_cache=args.from_cache, only_cache=args.only_cache, cache_result=args.cache_result
+                                         , from_cache_skip_timeouts=args.from_cache_skip_timeouts, ebmc_path='ebmc')
         
-        for model, data in models.items():
-            
+        for model, data in models.items():   
             for representation, lemmas in data.items():
                 updated_lemmas = []
                 for lemma in lemmas["lemmas"]:
-                    print(f"Processing lemma {lemma}")
+                    #print(f"Processing lemma {lemma}")
                     updated_lemmas.append({"lemma": lemma,
                                            "correct": lemma_evaluator.is_correct(lemma).value,
                                            "useful": lemma_evaluator.is_useful(lemma).value})

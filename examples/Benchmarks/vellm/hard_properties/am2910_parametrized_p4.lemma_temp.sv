@@ -161,6 +161,6 @@ module am2910(I,CCEN_BAR,CC_BAR,RLD_BAR,CI,OEbar,clk,D,Y,PL_BAR,
 	end
       // assert property (@(posedge clk)(old == 1'b0 || !(sp_old!= 3'd4 && sp_old != 3'd5) || reg_file5_old == reg_file[5]));
 //assert property (@(posedge clk) (old == 1'b0 || !(sp_old!= 4 && sp_old != 5) || $stable(reg_file[5])));
-assume property (@(posedge clk) (pop |-> sp != sp’)); 
-assert property (@(posedge clk) ((sp != 0 and sp!= (S_SIZE-2) and sp != (S_SIZE -1) and sp!= S_SIZE and $past(push) == 1 and pop == 1) |=> (reg_file[sp] == $past(reg_file[sp],2))));
+assert property (@(posedge clk) (pop |-> sp != sp’)); 
+// assert property (@(posedge clk) ((sp != 0 and sp!= (S_SIZE-2) and sp != (S_SIZE -1) and sp!= S_SIZE and $past(push) == 1 and pop == 1) |=> (reg_file[sp] == $past(reg_file[sp],2))));
 endmodule // am2910

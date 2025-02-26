@@ -564,7 +564,7 @@ module main(clock, start, k, nloss, nl, speaker);
 
 //   assert property (~(counter[2:0]==0 &  play==1) | (speaker == s));
 
-assume property (@(posedge clock) (wr == 1) |-> (memory[address] != 4'b1111)); 
+assume property ((nloss == 1) |-> ((nl[0] == 0) && (nl[1] == 0) && (nl[2] == 0) && (nl[3] == 0)));  
    assert property (~(nloss==0) | (~(nl[3:0]==15)));
    
 endmodule // b12

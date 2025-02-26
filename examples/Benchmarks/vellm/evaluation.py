@@ -10,8 +10,8 @@ import hashlib
 
 ebmc_executable = "/home/ubuntu/hw-cbmc/src/ebmc/ebmc" # Path to the EBMC executable
 
-JG_CORRECT_TIMEOUT = 1800
-JG_HELPFUL_TIMEOUT = 1800
+JG_CORRECT_TIMEOUT = 3600
+JG_HELPFUL_TIMEOUT = 600
 BMC_BOUND = 50
 
 
@@ -138,7 +138,8 @@ class VerilogModule:
 class LemmaEvaluator:
     """Evaluates a lemma using JG/EBMC."""
 
-    def __init__(self, tool, verilog_file, tcl_file=None, ebmc_path=ebmc_executable, from_cache = False, only_cache = False, cache_result=False):
+    def __init__(self, tool, verilog_file, tcl_file=None, ebmc_path=ebmc_executable, from_cache = False, only_cache = False, cache_result=False,
+                 from_cache_skip_timeouts=False):
         if tool not in ["jg", "ebmc"]:
             raise ValueError("Please specify a model checker to use") 
         self.module = VerilogModule(verilog_file, tcl_file)
@@ -148,6 +149,7 @@ class LemmaEvaluator:
         self.from_cache = from_cache
         self.only_cache = only_cache
         self.cache_result = cache_result
+        self.from_cache_skip_timeouts = from_cache_skip_timeouts
 
     def _hash_query(self, lemma: str, mode: str) -> str:
         """Generate a hash for the lemma, mode and module name to use as a cache key."""
@@ -179,12 +181,12 @@ class LemmaEvaluator:
             lemma (str): The lemma to add to the sv file.
             mode (str): Either "assert" or "assume".
         """
-        if (self.from_cache or self.only_cache):
+        if (self.from_cache or self.only_cache or self.from_cache_skip_timeouts):
             res = self._get_from_cache(lemma, mode)
-            if res is not None:
-                return self._get_from_cache(lemma, mode)
+            if res is not None and (not self.from_cache_skip_timeouts or res != VerificationResult.TIMEOUT):
+                return res
 
-        if self.only_cache:
+        if self.only_cache and not self.from_cache_skip_timeouts:
             return VerificationResult.UNCACHED
             
         base_name = os.path.splitext(self.module.filepath)[0]
