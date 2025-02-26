@@ -1,18 +1,22 @@
 import os
 import subprocess
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from utils import ROOT_DIR
+
 
 # directory containing the verilog modules
-directory_with_modules = "/home/romy.peled/vellm/nws/examples/Benchmarks/vellm/hard_properties"  
-template_file = "/home/romy.peled/vellm/nws/examples/Benchmarks/vellm/templates/verilog.txt"
-
+directory_with_modules = os.path.join(ROOT_DIR, "hard_properties")  
+template_file = os.path.join(ROOT_DIR, "templates/verilog.txt")
 # LLM models to be prompted
-models = ["gpt-4o", "anthropic.claude-v2:1", "meta-llama/Llama-3.1-8B-Instruct"]  # 
+#models = ["gpt-4o", "anthropic.claude-v2:1", "meta-llama/Llama-3.1-8B-Instruct"]  # 
+models = ["deepseek-r1"]
+
+script_path = os.path.join(ROOT_DIR, "scripts/create_json_prompt.py" )
 
 
-script_path = "/home/romy.peled/vellm/nws/examples/Benchmarks/vellm/scripts/prepare_json_prompt.py" 
-
-
-output_directory = "/home/romy.peled/vellm/nws/examples/Benchmarks/vellm/scripts/prompts"
+output_directory = os.path.join(ROOT_DIR, "scripts/prompts")
+print(output_directory)
 os.makedirs(output_directory, exist_ok=True)
 
 

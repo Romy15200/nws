@@ -204,6 +204,11 @@ class LemmaEvaluator:
         if self.cache_result:
             self._cache_result(lemma, mode, res)
         
+        #Clean up current directory from temp files
+        for f_path in [new_tcl_path, new_file_path]:
+            if os.path.exists(f_path):
+                os.remove(f_path)
+        
         return res
 
     def is_correct(self, lemma):

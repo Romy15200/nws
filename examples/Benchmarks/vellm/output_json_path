@@ -1,1 +1,0 @@
-{"gray_11-p3": {"anthropic.claude-v2:1": {"verilog": [{"lemma": "assume property (@(posedge clk) (!rst -> always eventually (gray_cnt==0)));", "correct": 

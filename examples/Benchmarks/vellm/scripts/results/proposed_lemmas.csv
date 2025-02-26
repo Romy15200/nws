@@ -1,4 +1,10 @@
 Module Name,LLM Model,Lemma #,Lemma,Representation
+sliding_board_256,anthropic.claude-v2:1,1,assume property (@(posedge clock) !($countones(match_bits) inside {[0:65534]}));,verilog
+sliding_board_256,anthropic.claude-v2:1,2,assume property (@(posedge clock) disable iff (!valid) freg==treg);,verilog
+sliding_board_256,anthropic.claude-v2:1,3,assume property (@(posedge clock) parity == prev(parity));,verilog
+sliding_board_256,gpt-4o,1,assume property (@(posedge clock) valid |-> ((treg[5:0] == freg[5:0] && (treg[15:8] == freg[15:8] + 1 || treg[15:8] + 1 == freg[15:8])) || (treg[11:6] == freg[11:6] && (treg[7:0] == freg[7:0] + 1 || treg[7:0] + 1 == freg[7:0]))));,verilog
+sliding_board_256,gpt-4o,2,assume property (@(posedge clock) valid |-> (parity == (((b[0] & 5) == 1) | ((b[0] & 5) == 4)) ^ (((b[1] & 5) == 0) | ((b[1] & 5) == 5)) ^ ... ));,verilog
+sliding_board_256,gpt-4o,3,assume property (@(posedge clock) !$onehot0(match_bits) |-> $countones(match_bits) < 65536);,verilog
 gray_11-p3,anthropic.claude-v2:1,1,assume property (@(posedge clk) (!rst -> always eventually (gray_cnt==0)));,verilog
 gray_11-p3,anthropic.claude-v2:1,2,assume property (@(posedge clk) (gray_cnt==0 -> sig));,verilog
 gray_11-p3,anthropic.claude-v2:1,3,assume property (@(posedge clk) (sig -> eventually!sig));,verilog
@@ -43,6 +49,6 @@ am2910_parametrized_p4,anthropic.claude-v2:1,3,assume property (@(posedge clk) (
 buffer_256,anthropic.claude-v2:1,1,assume property (@(posedge clock) alloc_addr < 128);,verilog
 buffer_256,anthropic.claude-v2:1,2,assume property (@(posedge clock) free_addr < 128);,verilog
 buffer_256,anthropic.claude-v2:1,3,assume property (@(posedge clock) (count'+count) <= 128);,verilog
-buffer_256,gpt-4o,1,assume property (@(posedge clock) alloc |-> (count < `SIZE));,verilog
-buffer_256,gpt-4o,2,assume property (@(posedge clock) (count == $past(count) + (alloc & ~nack) - (free & busy[free_addr])));,verilog
-buffer_256,gpt-4o,3,assume property (@(posedge clock) (alloc & ~nack & $past(busy[alloc_addr])) |-> (free & free_addr == alloc_addr));,verilog
+buffer_256,gpt-4o,1,assume property (@(posedge clock) (alloc |-> (count < `SIZE)));,verilog
+buffer_256,gpt-4o,2,assume property (@(posedge clock) (alloc_addr < `SIZE) && (free_addr < `SIZE));,verilog
+buffer_256,gpt-4o,3,assume property (@(posedge clock) (nack |-> (count == `SIZE)));,verilog

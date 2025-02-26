@@ -1,0 +1,7 @@
+torch
+boto3
+openai
+transformers
+diskcache
+hashlib
+ollama

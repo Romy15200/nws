@@ -43,6 +43,7 @@ class LLMBase(ABC):
         
         query_hash = self._hash_query(prompt)
         cache_hit = query_hash in self.cache
+      
 
         if clear:
             self.cache.delete(query_hash)
@@ -86,7 +87,7 @@ class Llama(LLMBase):
         super().__init__(model_name, cache_dir)
         self.model_name = model_name  
 
-    def _generate_responses(self, prompt: str, num_samples: int, temperature = 0.7) -> List[Tuple[str, float]]:
+    def _generate_responses(self, prompt: str, num_samples: int = 5, temperature = 0.7) -> List[Tuple[str, float]]:
         #if not hasattr(self, "device"):
         #    self.device =  0 if torch.cuda.is_available() else -1
         if not hasattr(self, "generator"):
@@ -143,7 +144,7 @@ class Claude(LLMBase):
 
 
 class GPT(LLMBase):
-    def __init__(self, model_name: str, cache_dir: str = "./llm_cache"):
+    def __init__(self, model_name: str, cache_dir: str = CACHE):
         super().__init__(model_name, cache_dir)
         #self.openai_api_key = os.getenv('OPENAI_API_KEY')
         self.client = None
@@ -176,7 +177,7 @@ class DeepSeekR1(LLMBase):
     def __init__(self, model_name: str, cache_dir: str = "./llm_cache"):
         super().__init__(model_name, cache_dir)
      
-    def _generate_responses(self, prompt: str, num_samples: int, temperature = 0.7) -> List[Tuple[str, float]]:
+    def _generate_responses(self, prompt: str, num_samples: int = 5, temperature = 0.7) -> List[Tuple[str, float]]:
         
         return [ollama.chat(model="deepseek-r1", messages=[{"role": "user", "content": prompt}])["message"]["content"] 
                for i in range(num_samples)]
